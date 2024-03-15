@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
 
-contract HookTemplate is ERC7579HookBase {
+contract SubscriptionModule is ERC7579HookBase {
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
     //////////////////////////////////////////////////////////////////////////*/
@@ -24,6 +24,16 @@ contract HookTemplate is ERC7579HookBase {
      * @return true if the module is initialized, false otherwise
      */
     function isInitialized(address smartAccount) external view returns (bool) { }
+
+    /*//////////////////////////////////////////////////////////////////////////
+                                     STORAGE
+    //////////////////////////////////////////////////////////////////////////*/
+
+    struct SubscriptionData {
+        address target;
+        uint256 value;
+        uint256 frequency;
+    }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
@@ -64,7 +74,7 @@ contract HookTemplate is ERC7579HookBase {
      * @return name The name of the module
      */
     function name() external pure returns (string memory) {
-        return "HookTemplate";
+        return "SubscriptionModule";
     }
 
     /**
