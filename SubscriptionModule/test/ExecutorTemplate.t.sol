@@ -144,8 +144,8 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
             txValidator: address(instance.defaultValidator)
         }).execUserOps();
 
-        bool success = sub_module.subscribe(params);
-        require(success, "Didn't successfully subscribe");
+        // bool success = sub_module.subscribe(params);
+        // require(success, "Didn't successfully subscribe");
 
         (SubscriptionModule.SubscriptionParams memory subscription_params, uint256 most_recent) = 
             sub_module.subscribers(IERC7579Account(instance.account),address(service));
@@ -180,12 +180,15 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
             target: address(service), value: value, frequency: frequency
         });
 
-        bool success = sub_module.subscribe(params);
-        require(success, "Didn't successfully subscribe");
+        instance.getExecOps({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(SubscriptionModule.subscribe, (params)),
+            txValidator: address(instance.defaultValidator)
+        }).execUserOps();
 
-        console.log(address(service).balance);
 
-        console.log(instance.account);
+        uint256 saved_balance = address(service).balance;
 
         instance.exec({
             target: address(sub_module),
@@ -196,39 +199,40 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
             )
         });
 
-        // instance.getExecOps({
-        //     target: address(sub_module),
-        //     value: 0,
-        //     callData: abi.encodeCall(SubscriptionModule.requestFunds, (address(service))),
-        //     txValidator: address(instance.defaultValidator)
-        // }).execUserOps();
-
-        console.log(address(service).balance);
+        require(address(service).balance == saved_balance + value, "Unable to initially deduct funds");
 
 
-        // UserOpData memory userOpData = instance.getExecOps({
-        //     target: address(this),
-        //     value: 0,
-        //     callData: ExecutionLib.encodeSingle(requestFunds, 0, ),
-        //     txValidator: address(sub_module)
-        // });
+        skip(1010);
 
-        // userOpData.execUserOps();
+        saved_balance = address(service).balance;
 
-        // // Set the signature
-        // bytes memory signature = hex"414141";
-        // userOpData.userOp.signature = signature;
+        instance.exec({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(
+                SubscriptionModule.requestFunds,
+                (address(service))
+            )
+        });
 
-        // AccountInstance[] memory request = new AccountInstance[](1);
-        // request[0] = instance;
+        require(address(service).balance == saved_balance + value, "Unable to deduct funds after a large time period");
 
-        // instance.exec({
-        //     target: address(sub_module),
-        //     value: 0,
-        //     callData: abi.encodeWithSelector(SubscriptionModule.requestFunds, )
-        // });
+        
+        skip(20);
 
-        // success = service.collect(instance);
-        // require(success, "User unsuccessful in providing payment");
+        saved_balance = address(service).balance;
+
+        instance.exec({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(
+                SubscriptionModule.requestFunds,
+                (address(service))
+            )
+        });
+
+        require(address(service).balance == saved_balance, "Balance incorrect after not being given sufficient time");
+
+        
     }
 }

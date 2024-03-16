@@ -120,65 +120,25 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
         return EIP1271_FAILED;
     }
 
-    // function validateUserOp(
-    //     PackedUserOperation calldata userOp,
-    //     bytes32 userOpHash
-    // )
-    //     external
-    //     view
-    //     override
-    //     returns (ValidationData)
-    // {
-    //     console.log("Called");
-
-    //     return _packValidationData({
-    //         sigFailed: false,
-    //         validAfter: uint48(block.timestamp),
-    //         validUntil: type(uint48).max
-    //     });
-    // }
-    
-    // function isValidSignatureWithSender(
-    //     address sender,
-    //     bytes32 hash,
-    //     bytes calldata signature
-    // )
-    //     external
-    //     view
-    //     virtual
-    //     override
-    //     returns (bytes4 sigValidationResult)
-    // {
-    //     return EIP1271_FAILED;
-    // }
-
-    // function getSubscriptions()
-    //     public view returns (SubscriptionData[] memory subscriptionData) {
-    //     return subscriptions_list;
-    // }
-
     function requestFunds(address service_addr) public returns(bool success) {
-        subscribers[IERC7579Account(msg.sender)][service_addr].params.value = 0.00001 ether;
 
-        console.log(msg.sender.balance);
-        console.log(subscribers[IERC7579Account(msg.sender)][service_addr].params.value);
-
-        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= msg.sender.balance) {
+        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= msg.sender.balance &&
+            subscribers[IERC7579Account(msg.sender)][service_addr].most_recent + 
+            subscribers[IERC7579Account(msg.sender)][service_addr].params.frequency <= block.timestamp) {
             IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
-            smartAccount.executeFromExecutor(
+            
+
+            bytes[] memory info = smartAccount.executeFromExecutor(
                 ModeLib.encodeSimpleSingle(),
                 ExecutionLib.encodeSingle(
                     service_addr,
-                    // subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
-                    0.000001 ether,
+                    subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
                     ""
                 )
             );
 
-            // console.log(data);
-
-            // require(send, "Send not executed successfully");
+            subscribers[IERC7579Account(msg.sender)][service_addr].most_recent += subscribers[IERC7579Account(msg.sender)][service_addr].params.frequency;
         }
 
         // for (uint256 i = 0; i < subscriptions_list.length; i++) {
