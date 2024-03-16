@@ -234,5 +234,29 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         require(address(service).balance == saved_balance, "Balance incorrect after not being given sufficient time");
 
         
+
+        instance.getExecOps({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(SubscriptionModule.unsubscribe, (address(service))),
+            txValidator: address(instance.defaultValidator)
+        }).execUserOps();
+
+        
+        skip(20000);
+
+        saved_balance = address(service).balance;
+
+        instance.exec({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(
+                SubscriptionModule.requestFunds,
+                (address(service))
+            )
+        });
+
+        require(address(service).balance == saved_balance, "Balance incorrect unsubscribing");
+
     }
 }

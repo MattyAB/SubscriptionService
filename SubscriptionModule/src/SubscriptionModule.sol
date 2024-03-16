@@ -78,9 +78,6 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
 
     function subscribe(SubscriptionParams memory params)
         public returns (bool success) {
-        // require(value >= service.min_sub_value(), "Minimum subscription value not reached");
-        // require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
-
         SubscriptionData memory this_data = SubscriptionData({
             params: params,
             most_recent: block.timestamp - params.frequency
@@ -89,6 +86,10 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
         subscribers[IERC7579Account(msg.sender)][params.target] = this_data;
 
         return true;
+    }
+
+    function unsubscribe(address service) public returns (bool success) {
+        delete subscribers[IERC7579Account(msg.sender)][service];
     }
 
     function validateUserOp(
@@ -140,36 +141,6 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
 
             subscribers[IERC7579Account(msg.sender)][service_addr].most_recent += subscribers[IERC7579Account(msg.sender)][service_addr].params.frequency;
         }
-
-        // for (uint256 i = 0; i < subscriptions_list.length; i++) {
-        //     // console.log(subscriptions_list[i].params.target);
-        //     // console.log(msg.sender);
-        //     // console.log(subscriptions_list[i].params.value);
-        //     // console.log(address(this).balance);
-
-
-
-        //     if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
-        //         IERC7579Account smartAccount = IERC7579Account(ownerAccount);
-
-        //         smartAccount.executeFromExecutor(
-        //             ModeLib.encodeSimpleSingle(),
-        //             ExecutionLib.encodeSingle(
-        //                 msg.sender,
-        //                 subscriptions_list[i].params.value,
-        //                 ""
-        //             )
-        //         );
-
-        //         // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
-
-        //         // require(send, "Send not executed successfully");
-
-        //         subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
-
-        //         return true;
-        //     }
-        // }
 
         return false;
     }
