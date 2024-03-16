@@ -9,3 +9,5 @@ SubscriptionModule/docs/
 # Dotenv file
 SubscriptionModule/.env
 SubscriptionModule/node_modules
+
+node_modules
