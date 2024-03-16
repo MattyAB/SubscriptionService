@@ -5,6 +5,8 @@ import "forge-std/console.sol";
 
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
 
+import { SubscriptionModule } from "./SubscriptionModule.sol";
+
 contract Service {
     address owner;
 
@@ -29,18 +31,31 @@ contract Service {
         require(sent, "Ether not withdrawn successfully");
     }
 
-    // Returns the time at which the subscriber last paid
-    function get_subscriber_recent(address subscriber) public returns(uint256 height) {
-        return subscribers[subscriber];
+    // // Returns the time at which the subscriber last paid
+    // function get_subscriber_recent(address subscriber) public returns(uint256 height) {
+    //     return subscribers[subscriber];
+    // }
+
+    function collect(SubscriptionModule[] memory users) public authorised returns(bool success) {
+        for (uint256 i = 0; i < users.length; i++) {
+            if (subscribers[address(users[i])] + sub_frequency <= block.timestamp) {
+                users[i].requestFunds();
+            }
+        }
+
+        return true;
     }
 
+    // function collect_initial() public returns(bool[] success) {
+
+    // }
     
     ///// USER-SIDE FUNCTIONS
 
-    function notify_subscription() public {
-        // Otherwise we'll run into all sorts of problems with the uint type.
-        require(block.timestamp >= sub_frequency, "Timestamp too low");
+    // function notify_subscription() public {
+    //     // Otherwise we'll run into all sorts of problems with the uint type.
+    //     require(block.timestamp >= sub_frequency, "Timestamp too low");
 
-        subscribers[msg.sender] = block.timestamp - sub_frequency;
-    }
+    //     subscribers[msg.sender] = block.timestamp - sub_frequency;
+    // }
 }

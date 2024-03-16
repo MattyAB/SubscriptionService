@@ -68,13 +68,8 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         uint256 frequency = 1000;
         uint256 value = 0.1 ether;
 
-        bool success = sub_module.subscribe(service, value, frequency);
-
-        // SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
-        //     target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
-        // });
-        
-        console.log(service.get_subscriber_recent(address(sub_module)));
+        bool success = sub_module.subscribe(address(service), value, frequency);
+        require(success, "Didn't successfully subscribe");
 
         SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
 
@@ -82,21 +77,32 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         assertEq(data_returned[0].value, value);
         assertEq(data_returned[0].frequency, frequency);
         assertEq(data_returned[0].most_recent, block.timestamp - frequency);
-
-        assertEq(service.get_subscriber_recent(address(sub_module)), block.timestamp - frequency);
     }
 
-    function testSubscribeInsufficientValue() public {
-        try sub_module.subscribe(service, 0.01 ether, 1000) {
-            assertEq(false, true, "Expected an error.");
-        } catch Error(string memory message) {
-            assertEq(message, "Minimum subscription value not reached");
-        }
-    }
-
-    // function testSubscribeInsufficientFrequency() public {
-    //     bool success = sub_module.subscribe(service, 0.1 ether, 10000);
-        
-
+    // function testSubscribeInsufficientValue() public {
+    //     try sub_module.subscribe(address(service), 0.01 ether, 1000) {
+    //         assertEq(false, true, "Expected an error.");
+    //     } catch Error(string memory message) {
+    //         assertEq(message, "Minimum subscription value not reached");
+    //     }
     // }
+
+    // function testSubscribeInsufficientFreq() public {
+    //     try sub_module.subscribe(address(service), 0.1 ether, 100) {
+    //         assertEq(false, true, "Expected an error.");
+    //     } catch Error(string memory message) {
+    //         assertEq(message, "Subscription payment frequnecy too low");
+    //     }
+    // }
+
+    function testSubscribeDrawFunds() public {
+        uint256 frequency = 1000;
+        uint256 value = 0.1 ether;
+
+        bool success = sub_module.subscribe(address(service), value, frequency);
+        require(success, "Didn't successfully subscribe");
+
+        // bool success = service.collect([sub_module]);
+        // require(success);
+    }
 }

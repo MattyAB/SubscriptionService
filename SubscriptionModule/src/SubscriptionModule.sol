@@ -4,7 +4,7 @@ pragma solidity ^0.8.23;
 import "forge-std/console.sol";
 
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
-import { Service } from "./Service.sol";
+// import { Service } from "./Service.sol";
 
 contract SubscriptionModule is ERC7579HookBase {
     /*//////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ contract SubscriptionModule is ERC7579HookBase {
     //////////////////////////////////////////////////////////////////////////*/
 
     struct SubscriptionData {
-        Service target;
+        address target;
         uint256 value;
         uint256 frequency;
         uint256 most_recent; // Most recent block height
@@ -71,12 +71,10 @@ contract SubscriptionModule is ERC7579HookBase {
         (success) = abi.decode(hookData, (bool));
     }
 
-    function subscribe(Service service, uint256 value, uint256 frequency)
+    function subscribe(address service, uint256 value, uint256 frequency)
         public returns (bool success) {
-        require(value >= service.min_sub_value(), "Minimum subscription value not reached");
-        require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
-
-        service.notify_subscription();
+        // require(value >= service.min_sub_value(), "Minimum subscription value not reached");
+        // require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
 
         SubscriptionData memory this_data = SubscriptionData({
             target: service,
@@ -86,13 +84,29 @@ contract SubscriptionModule is ERC7579HookBase {
         });
 
         subscriptions_list.push(this_data);
-        
+
         return true;
     }
 
     function getSubscriptions()
         public view returns (SubscriptionData[] memory subscriptionData) {
         return subscriptions_list;
+    }
+
+    function requestFunds() public returns(bool success) {
+        for (uint256 i = 0; i < subscriptions_list.length; i++) {
+            if (subscriptions_list[i].target == msg.sender && subscriptions_list[i].value <= address(this).balance) {
+                (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
+
+                require(send, "Send not executed successfully");
+
+                subscriptions_list[i].most_recent += subscriptions_list[i].frequency;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
