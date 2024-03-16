@@ -1,63 +1,3 @@
-// import React, { useState } from 'react';
-// import Button from 'react-bootstrap/Button'
-// import { ethers, providers } from "ethers";
-// const provider = new ethers.providers.Web3Provider(window.Ethereum)
-// // const provider = new providers.AlchemyProvider("homestead", "2jSgCQ15eGp04K55iljm015-XrA4gBEO")
-
-// const WalletComponent = () => {
-//     const [errorMessage, setErrorMessage] = useState(null);
-//     const [defaultAccount, setDefaultAccount] = useState(null);
-//     const [userBalance, setUserBalance] = useState(null);
-//     const connectwalletHandler = () => {
-//         if (window.ethereum) {
-//             provider.send("eth_requestAccounts", [])
-//                 .then(async () => {
-//                     await accountChangedHandler(provider.getSigner());
-//                 })
-//         } else {
-//             setErrorMessage("Please Install MetaMask!!!");
-//         }
-//     }
-
-//     const accountChangedHandler = async (newAccount) => {
-//         const address = await newAccount.getAddress();
-//         setDefaultAccount(address);
-//         const balance = await newAccount.getBalance()
-//         setUserBalance(ethers.utils.formatEther(balance));
-//         await getuserBalance(address)
-//     }
-
-//     const getuserBalance = async (address) => {
-//         const balance = await provider.getBalance(address, "latest")
-//     }
-
-//     return (
-//         <div className="WalletCard">
-//             <h3 className="h4">
-//                 Welcome to a decentralized Application
-//             </h3>
-//             <Button
-//                 style={{ background: defaultAccount ? "#A5CC82" : "white" }}
-//                 onClick={connectwalletHandler}>
-//                 {defaultAccount ? "Connected!!" : "Connect"}
-//             </Button>
-//             <div className="displayAccount">
-//                 <h4 className="walletAddress">Address:{defaultAccount}</h4>
-//                 <div className="balanceDisplay">
-//                     <h3>
-//                         Wallet Amount: {userBalance}
-//                     </h3>
-//                 </div>
-//             </div>
-//             {errorMessage}
-//         </div>
-//     )
-// }
-
-// export default WalletComponent;
-
-// Detect the MetaMask Ethereum provider
-
 import detectEthereumProvider from '@metamask/detect-provider';
 import { useState } from 'react';
 import { Button } from 'react-bootstrap';
@@ -67,9 +7,7 @@ const provider = await detectEthereumProvider();
 
 
 export function WalletComponent({ connected, setConnected }) {
-    // const connected = false
     const [errorText, setErrorText] = useState("")
-    // const [connected, setConnected] = useState(false)
     const [accountAddress, setAccountAddress] = useState("")
 
     function ConnectButton() {
@@ -96,15 +34,6 @@ export function WalletComponent({ connected, setConnected }) {
         }
     }
 
-    // Prompt users to connect to MetaMask
-
-    // const ethereumButton = document.querySelector('.enableEthereumButton');
-    // const showAccount = document.querySelector('.showAccount');
-
-    // ethereumButton.addEventListener('click', () => {
-    //     getAccount();
-    // });
-
     async function getAccount() {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
             .catch((err) => {
@@ -123,7 +52,6 @@ export function WalletComponent({ connected, setConnected }) {
             console.log(err)
             setErrorText("Please try again.")
         }
-        // showAccount.innerHTML = account;
     }
 
     return (
@@ -147,7 +75,6 @@ export function WalletComponent({ connected, setConnected }) {
             </style>
             <ConnectButton></ConnectButton>
             <ConnectedStatus></ConnectedStatus>
-            {/* <Button className="metamask-btn" onClick={getAccount}>Connect Metamask</Button> */}
             <p>{errorText}</p>
         </>
     )

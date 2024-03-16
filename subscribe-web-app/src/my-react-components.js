@@ -1,6 +1,3 @@
-// import Container from 'react-bootstrap/Container';
-// import Nav from 'react-bootstrap/Nav';
-// import Navbar from 'react-bootstrap/Navbar';
 import { useState, useRef } from 'react'
 import {
     Button,
@@ -76,5 +73,3 @@ export function Footer() {
         </Container>
     )
 }
-
-// export default BasicExample;
