@@ -5,13 +5,13 @@ import "forge-std/Script.sol";
 import { RegistryDeployer } from "modulekit/deployment/RegistryDeployer.sol";
 
 // Import modules here
-import { ValidatorTemplate } from "src/ValidatorTemplate.sol";
+import { SubscriptionModule } from "src/SubscriptionModule.sol";
 
 /// @title DeployModuleScript
 contract DeployModuleScript is Script, RegistryDeployer {
     function run() public {
         // Setup module bytecode, deploy params, and data
-        bytes memory bytecode = type(ValidatorTemplate).creationCode;
+        bytes memory bytecode = type(SubscriptionModule).creationCode;
         bytes memory deployParams = "";
         bytes memory data = "";
 
