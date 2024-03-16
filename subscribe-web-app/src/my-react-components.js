@@ -22,7 +22,7 @@ export function NavBar({ subscribed }) {
                 <Container fluid>
                     <Navbar.Brand href="home" className='ms-3'>SubHub</Navbar.Brand>
                     <Nav className='me-5'>
-                        {subscribed ? <Button variant='primary' onClick={handleShowModal} show={false}>My Subscription</Button> : null}
+                        {subscribed ? <Button variant='primary' onClick={handleShowModal}>My Subscription</Button> : null}
                     </Nav>
                 </Container>
             </Navbar>
@@ -48,7 +48,7 @@ export function NavBar({ subscribed }) {
     );
 }
 
-export function SubscriptionContent({ connected, subscribed }) {
+export function SubscriptionContent({ connected, subscribed, subscribe }) {
     function CardContent({ connected, subscribed }) {
         if (!connected) {
             return (
@@ -66,7 +66,7 @@ export function SubscriptionContent({ connected, subscribed }) {
                     <Card.Text>
                         Click the button below to subscribe.
                     </Card.Text>
-                    <Button>Subscribe</Button>
+                    <Button onClick={subscribe}>Subscribe</Button>
                 </Card.Body>
             )
         } else {

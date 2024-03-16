@@ -1,15 +1,6 @@
-import detectEthereumProvider from '@metamask/detect-provider';
-import { useState } from 'react';
 import { Button } from 'react-bootstrap';
 
-const provider = await detectEthereumProvider();
-
-
-
-export function WalletComponent({ connected, setConnected }) {
-    const [errorText, setErrorText] = useState("")
-    const [accountAddress, setAccountAddress] = useState("")
-
+export function WalletComponent({ connected, getAccount, errorText, accountAddress }) {
     function ConnectButton() {
         if (!connected) {
             return (<Button className="metamask-btn" onClick={getAccount}>Connect Metamask</Button>)
@@ -19,38 +10,6 @@ export function WalletComponent({ connected, setConnected }) {
     function ConnectedStatus() {
         if (connected) {
             return (<p className="text-wrap">Connected to account {accountAddress}</p>)
-        }
-    }
-
-    if (provider) {
-        startApp(provider);
-    } else {
-        console.log('Please install MetaMask!');
-    }
-
-    function startApp(provider) {
-        if (provider !== window.ethereum) {
-            console.error('Do you have multiple wallets installed?');
-        }
-    }
-
-    async function getAccount() {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
-            .catch((err) => {
-                if (err.code === 4001) {
-                    console.log('Please connect to MetaMask.');
-                } else {
-                    console.error(err);
-                }
-            });
-        try {
-            const account = accounts[0];
-            setAccountAddress(account)
-            setErrorText("")
-            setConnected(true)
-        } catch (err) {
-            console.log(err)
-            setErrorText("Please try again.")
         }
     }
 
