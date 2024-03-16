@@ -30,16 +30,31 @@ import { WalletComponent } from './WalletConnection';
 import { Container } from 'react-bootstrap';
 // import "./WalletConnection"
 
+function PageContent() {
+  const [connected, setConnected] = useState(false)
+  return (
+    <>
+      <NavBar></NavBar>
+      <Container fluid className="d-flex flex-column align-items-center">
+        <WalletComponent connected={connected} setConnected={setConnected} onConnect={() => {
+          setConnected(true)
+          console.log("hi")
+        }}></WalletComponent>
+        {/* <WalletComponent connected={connected} onConnect={setConnected(true)}></WalletComponent> */}
+        <SubscriptionContent></SubscriptionContent>
+      </Container>
+      <Footer></Footer>
+    </>
+  )
+}
+
 class App extends Component {
+
   render() {
+
     return (
       <body>
-        <NavBar></NavBar>
-        <Container fluid className="d-flex flex-column align-items-center">
-          <WalletComponent></WalletComponent>
-          <SubscriptionContent></SubscriptionContent>
-        </Container>
-        <Footer></Footer>
+        <PageContent></PageContent>
       </body>
 
       // <body class="d-flex flex-column h-100">

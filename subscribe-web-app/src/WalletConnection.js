@@ -66,9 +66,23 @@ const provider = await detectEthereumProvider();
 
 
 
-export function WalletComponent() {
+export function WalletComponent({ connected, setConnected }) {
+    // const connected = false
     const [errorText, setErrorText] = useState("")
-    const [connected, setConnected] = useState(false)
+    // const [connected, setConnected] = useState(false)
+    const [accountAddress, setAccountAddress] = useState("")
+
+    function ConnectButton() {
+        if (!connected) {
+            return (<Button className="metamask-btn" onClick={getAccount}>Connect Metamask</Button>)
+        }
+    }
+
+    function ConnectedStatus() {
+        if (connected) {
+            return (<p>Connected to account {accountAddress}</p>)
+        }
+    }
 
     if (provider) {
         startApp(provider);
@@ -102,9 +116,11 @@ export function WalletComponent() {
             });
         try {
             const account = accounts[0];
+            setAccountAddress(account)
             setErrorText("")
             setConnected(true)
         } catch (err) {
+            console.log(err)
             setErrorText("Please try again.")
         }
         // showAccount.innerHTML = account;
@@ -129,7 +145,9 @@ export function WalletComponent() {
     }
     `}
             </style>
-            <Button className="metamask-btn" onClick={getAccount}>Connect Metamask</Button>
+            <ConnectButton></ConnectButton>
+            <ConnectedStatus></ConnectedStatus>
+            {/* <Button className="metamask-btn" onClick={getAccount}>Connect Metamask</Button> */}
             <p>{errorText}</p>
         </>
     )
