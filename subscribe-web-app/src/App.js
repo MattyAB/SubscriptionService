@@ -25,14 +25,26 @@
 // export default App;
 
 import React, { Component } from 'react'
-import { NavBar, Footer } from './my-react-components'
-// import './App.css'
+import { NavBar, SubscriptionContent, Footer } from './my-react-components'
+// import { ethers } from "ethers"
+
+// const connectwalletHandler = () => {
+//   if (window.ethereum) {
+//     provider.send("eth_requestAccounts", [])
+//       .then(async () => {
+//         await accountChangedHandler(provider.getSigner());
+//       })
+//   } else {
+//     setErrorMessage("Please Install MetaMask!!!");
+//   }
+// }
 
 class App extends Component {
   render() {
     return (
       <body>
         <NavBar></NavBar>
+        <SubscriptionContent></SubscriptionContent>
         <Footer></Footer>
       </body>
 
