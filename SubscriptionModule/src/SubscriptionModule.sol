@@ -104,6 +104,21 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
         return ValidationData.wrap(0);
     }
 
+    function isValidSignatureWithSender(
+        address sender,
+        bytes32 hash,
+        bytes calldata data
+    )
+        external
+        view
+        override
+        returns (bytes4)
+    {
+        console.log("Called");
+
+        return EIP1271_FAILED;
+    }
+
     // function validateUserOp(
     //     PackedUserOperation calldata userOp,
     //     bytes32 userOpHash
@@ -122,72 +137,73 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
     //     });
     // }
     
-    function isValidSignatureWithSender(
-        address sender,
-        bytes32 hash,
-        bytes calldata signature
-    )
-        external
-        view
-        virtual
-        override
-        returns (bytes4 sigValidationResult)
-    {
-        return EIP1271_FAILED;
-    }
+    // function isValidSignatureWithSender(
+    //     address sender,
+    //     bytes32 hash,
+    //     bytes calldata signature
+    // )
+    //     external
+    //     view
+    //     virtual
+    //     override
+    //     returns (bytes4 sigValidationResult)
+    // {
+    //     return EIP1271_FAILED;
+    // }
 
     // function getSubscriptions()
     //     public view returns (SubscriptionData[] memory subscriptionData) {
     //     return subscriptions_list;
     // }
 
-    // function requestFunds(address service_addr) public returns(bool success) {
-    //     if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= address(this).balance) {
-    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
+    function requestFunds(address service_addr) public returns(bool success) {
+        console.log(msg.sender);
 
-    //             smartAccount.executeFromExecutor(
-    //                 ModeLib.encodeSimpleSingle(),
-    //                 ExecutionLib.encodeSingle(
-    //                     msg.sender,
-    //                     subscriptions_list[i].params.value,
-    //                     ""
-    //                 )
-    //             );
+        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= address(this).balance) {
+            IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
-    //     }
+            smartAccount.executeFromExecutor(
+                ModeLib.encodeSimpleSingle(),
+                ExecutionLib.encodeSingle(
+                    msg.sender,
+                    subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
+                    ""
+                )
+            );
+        }
 
-    //     for (uint256 i = 0; i < subscriptions_list.length; i++) {
-    //         // console.log(subscriptions_list[i].params.target);
-    //         // console.log(msg.sender);
-    //         // console.log(subscriptions_list[i].params.value);
-    //         // console.log(address(this).balance);
+        // for (uint256 i = 0; i < subscriptions_list.length; i++) {
+        //     // console.log(subscriptions_list[i].params.target);
+        //     // console.log(msg.sender);
+        //     // console.log(subscriptions_list[i].params.value);
+        //     // console.log(address(this).balance);
 
 
 
-    //         if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
-    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
+        //     if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
+        //         IERC7579Account smartAccount = IERC7579Account(ownerAccount);
 
-    //             smartAccount.executeFromExecutor(
-    //                 ModeLib.encodeSimpleSingle(),
-    //                 ExecutionLib.encodeSingle(
-    //                     msg.sender,
-    //                     subscriptions_list[i].params.value,
-    //                     ""
-    //                 )
-    //             );
+        //         smartAccount.executeFromExecutor(
+        //             ModeLib.encodeSimpleSingle(),
+        //             ExecutionLib.encodeSingle(
+        //                 msg.sender,
+        //                 subscriptions_list[i].params.value,
+        //                 ""
+        //             )
+        //         );
 
-    //             // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
+        //         // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
 
-    //             // require(send, "Send not executed successfully");
+        //         // require(send, "Send not executed successfully");
 
-    //             subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
+        //         subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
 
-    //             return true;
-    //         }
-    //     }
+        //         return true;
+        //     }
+        // }
 
-    //     return false;
-    // }
+        return false;
+    }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA

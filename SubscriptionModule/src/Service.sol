@@ -10,8 +10,14 @@ import {
     RhinestoneModuleKit,
     ModuleKitHelpers,
     ModuleKitUserOp,
-    AccountInstance
+    AccountInstance,
+    UserOpData
 } from "modulekit/ModuleKit.sol";
+import { IERC7579Account } from "modulekit/Accounts.sol";
+
+import { ModeLib } from "erc7579/lib/ModeLib.sol";
+import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
+import "modulekit/test/ModuleKitHelpers.sol";
 
 contract Service {
     using ModuleKitHelpers for *;
@@ -48,15 +54,37 @@ contract Service {
     //     return subscribers[subscriber];
     // }
 
-    function collect(AccountInstance calldata user) public authorised returns(bool) {
+    function collect(AccountInstance memory user) public authorised returns(bool) {
         console.log("Here");
+
+        // UserOpData memory userOpData = user.getExecOps({
+        //     target: address(this),
+        //     value: 0.0001 ether,
+        //     callData: "",
+        //     txValidator: address(sub_module)
+        // });
+
+        // // Set the signature
+        // bytes memory signature = hex"414141";
+        // userOpData.userOp.signature = signature;
+
+        // console.log("Hellow");
+
+        // // Execute the UserOp
+        // userOpData.execUserOps();
+
+        // bytes memory callData = ExecutionLib.encodeSingle(address(this), 0.0001 ether, "");
+
+        // console.log("part 1");
+
+        // IERC7579Account(user).execute(ModeLib.encodeSimpleSingle(), callData);
 
         // user.exec({
         //     target: address(sub_module),
         //     value: 0,
         //     callData: abi.encodeCall(
         //         SubscriptionModule.requestFunds,
-        //         ()
+        //         (address(this))
         //     )
         // });
 
@@ -65,37 +93,37 @@ contract Service {
         return true;
     }
 
-    function collect(AccountInstance[] memory users) public authorised returns(bool[] memory) {
-        bool[] memory returner = new bool[](users.length);
+    // function collect(address[] memory users) public authorised returns(bool[] memory) {
+    //     bool[] memory returner = new bool[](users.length);
 
-        for (uint256 i = 0; i < users.length; i++) {
-            if (subscribers[users[i].account] + sub_frequency <= block.timestamp) {
-                // users[i].exec({
-                //     target: address(sub_module),
-                //     value: 0,
-                //     callData: abi.encodeCall(
-                //         SubscriptionModule.requestFunds,
-                //         ()
-                //     )
-                // });
+    //     for (uint256 i = 0; i < users.length; i++) {
+    //         if (subscribers[users[i].account] + sub_frequency <= block.timestamp) {
+    //             // users[i].exec({
+    //             //     target: address(sub_module),
+    //             //     value: 0,
+    //             //     callData: abi.encodeCall(
+    //             //         SubscriptionModule.requestFunds,
+    //             //         ()
+    //             //     )
+    //             // });
 
-                // console.log(funds_received);
+    //             // console.log(funds_received);
 
-                // if (funds_received) {
-                //     subscribers[address(users[i])] += sub_frequency;
-                //     returner[i] = true;
-                // } else {
-                //     returner[i] = false;
-                // }
+    //             // if (funds_received) {
+    //             //     subscribers[address(users[i])] += sub_frequency;
+    //             //     returner[i] = true;
+    //             // } else {
+    //             //     returner[i] = false;
+    //             // }
 
-                // // require(funds_received, "Funds not successfully retreived");
+    //             // // require(funds_received, "Funds not successfully retreived");
 
-                // subscribers[address(users[i])] += sub_frequency;
-            }
-        }
+    //             // subscribers[address(users[i])] += sub_frequency;
+    //         }
+    //     }
 
-        return returner;
-    }
+    //     return returner;
+    // }
 
     // function collect_initial() public returns(bool[] success) {
 

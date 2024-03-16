@@ -6,10 +6,11 @@ import {
     RhinestoneModuleKit,
     ModuleKitHelpers,
     ModuleKitUserOp,
-    AccountInstance
+    AccountInstance,
+    UserOpData
 } from "modulekit/ModuleKit.sol";
 import { IERC7579Account } from "modulekit/Accounts.sol";
-import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
+import { MODULE_TYPE_EXECUTOR, MODULE_TYPE_VALIDATOR } from "modulekit/external/ERC7579.sol";
 import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { Service } from "src/Service.sol";
@@ -38,8 +39,14 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         // Create the account and install the hook
         instance = makeAccountInstance("SubscriptionModule");
         vm.deal(address(instance.account), 10 ether);
+        
         instance.installModule({
             moduleTypeId: MODULE_TYPE_EXECUTOR,
+            module: address(sub_module),
+            data: ""
+        });
+        instance.installModule({
+            moduleTypeId: MODULE_TYPE_VALIDATOR,
             module: address(sub_module),
             data: ""
         });
@@ -66,6 +73,33 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
             value: 0,
             callData: abi.encodeWithSelector(SubscriptionModule.execute.selector, callData)
         });
+
+        // Check if the balance of the target has increased
+        assertEq(target.balance, prevBalance + value);
+    }
+
+    function testExec2() public {
+        // Create a target address and send some ether to it
+        address target = makeAddr("target");
+        uint256 value = 1 ether;
+
+        // Get the current balance of the target
+        uint256 prevBalance = target.balance;
+
+        // Get the UserOp data (UserOperation and UserOperationHash)
+        UserOpData memory userOpData = instance.getExecOps({
+            target: target,
+            value: value,
+            callData: "",
+            txValidator: address(sub_module)
+        });
+
+        // Set the signature
+        bytes memory signature = hex"414141";
+        userOpData.userOp.signature = signature;
+
+        // Execute the UserOp
+        userOpData.execUserOps();
 
         // Check if the balance of the target has increased
         assertEq(target.balance, prevBalance + value);
@@ -105,7 +139,7 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         assertEq(address(subscription_params.target), address(service));
         assertEq(subscription_params.value, value);
         assertEq(subscription_params.frequency, frequency);
-        // assertEq(most_recent, block.timestamp - frequency);
+        assertEq(most_recent, block.timestamp - frequency);
     }
 
     // function testSubscribeInsufficientValue() public {
@@ -135,16 +169,45 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
+        console.log(address(this));
+
+        console.log(address(this).balance);
+
+        instance.exec({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(
+                SubscriptionModule.requestFunds,
+                (address(this))
+            )
+        });
+
+        console.log(address(this).balance);
+
+
+        // UserOpData memory userOpData = instance.getExecOps({
+        //     target: address(this),
+        //     value: 0,
+        //     callData: ExecutionLib.encodeSingle(requestFunds, 0, ),
+        //     txValidator: address(sub_module)
+        // });
+
+        // userOpData.execUserOps();
+
+        // // Set the signature
+        // bytes memory signature = hex"414141";
+        // userOpData.userOp.signature = signature;
+
         // AccountInstance[] memory request = new AccountInstance[](1);
         // request[0] = instance;
 
         // instance.exec({
         //     target: address(sub_module),
         //     value: 0,
-        //     callData: abi.encodeWithSelector(SubscriptionModule.execute.selector, callData)
+        //     callData: abi.encodeWithSelector(SubscriptionModule.requestFunds, )
         // });
 
-        success = service.collect(instance);
-        require(success, "User unsuccessful in providing payment");
+        // success = service.collect(instance);
+        // require(success, "User unsuccessful in providing payment");
     }
 }
