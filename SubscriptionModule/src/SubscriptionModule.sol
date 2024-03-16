@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import "forge-std/console.sol";
 
+import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 import { ERC7579ExecutorBase, ERC7579ValidatorBase, ERC7579HookBase } from "modulekit/Modules.sol";
 import { IERC7579Account } from "modulekit/Accounts.sol";
 import { ModeLib } from "erc7579/lib/ModeLib.sol";
@@ -77,9 +78,6 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
 
     function subscribe(SubscriptionParams memory params)
         public returns (bool success) {
-        // require(value >= service.min_sub_value(), "Minimum subscription value not reached");
-        // require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
-
         SubscriptionData memory this_data = SubscriptionData({
             params: params,
             most_recent: block.timestamp - params.frequency
@@ -88,6 +86,10 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
         subscribers[IERC7579Account(msg.sender)][params.target] = this_data;
 
         return true;
+    }
+
+    function unsubscribe(address service) public returns (bool success) {
+        delete subscribers[IERC7579Account(msg.sender)][service];
     }
 
     function validateUserOp(
@@ -104,90 +106,44 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
         return ValidationData.wrap(0);
     }
 
-    // function validateUserOp(
-    //     PackedUserOperation calldata userOp,
-    //     bytes32 userOpHash
-    // )
-    //     external
-    //     view
-    //     override
-    //     returns (ValidationData)
-    // {
-    //     console.log("Called");
-
-    //     return _packValidationData({
-    //         sigFailed: false,
-    //         validAfter: uint48(block.timestamp),
-    //         validUntil: type(uint48).max
-    //     });
-    // }
-    
     function isValidSignatureWithSender(
         address sender,
         bytes32 hash,
-        bytes calldata signature
+        bytes calldata data
     )
         external
         view
-        virtual
         override
-        returns (bytes4 sigValidationResult)
+        returns (bytes4)
     {
+        console.log("Called");
+
         return EIP1271_FAILED;
     }
 
-    // function getSubscriptions()
-    //     public view returns (SubscriptionData[] memory subscriptionData) {
-    //     return subscriptions_list;
-    // }
+    function requestFunds(address service_addr) public returns(bool success) {
 
-    // function requestFunds(address service_addr) public returns(bool success) {
-    //     if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= address(this).balance) {
-    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
+        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= msg.sender.balance &&
+            subscribers[IERC7579Account(msg.sender)][service_addr].most_recent + 
+            subscribers[IERC7579Account(msg.sender)][service_addr].params.frequency <= block.timestamp) {
+            IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
-    //             smartAccount.executeFromExecutor(
-    //                 ModeLib.encodeSimpleSingle(),
-    //                 ExecutionLib.encodeSingle(
-    //                     msg.sender,
-    //                     subscriptions_list[i].params.value,
-    //                     ""
-    //                 )
-    //             );
+            
 
-    //     }
+            bytes[] memory info = smartAccount.executeFromExecutor(
+                ModeLib.encodeSimpleSingle(),
+                ExecutionLib.encodeSingle(
+                    service_addr,
+                    subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
+                    ""
+                )
+            );
 
-    //     for (uint256 i = 0; i < subscriptions_list.length; i++) {
-    //         // console.log(subscriptions_list[i].params.target);
-    //         // console.log(msg.sender);
-    //         // console.log(subscriptions_list[i].params.value);
-    //         // console.log(address(this).balance);
+            subscribers[IERC7579Account(msg.sender)][service_addr].most_recent += subscribers[IERC7579Account(msg.sender)][service_addr].params.frequency;
+        }
 
-
-
-    //         if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
-    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
-
-    //             smartAccount.executeFromExecutor(
-    //                 ModeLib.encodeSimpleSingle(),
-    //                 ExecutionLib.encodeSingle(
-    //                     msg.sender,
-    //                     subscriptions_list[i].params.value,
-    //                     ""
-    //                 )
-    //             );
-
-    //             // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
-
-    //             // require(send, "Send not executed successfully");
-
-    //             subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
-
-    //             return true;
-    //         }
-    //     }
-
-    //     return false;
-    // }
+        return false;
+    }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA
