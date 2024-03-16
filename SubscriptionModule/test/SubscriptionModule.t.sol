@@ -36,7 +36,7 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         instance.installModule({ moduleTypeId: MODULE_TYPE_HOOK, module: address(sub_module), data: "" });
 
         // Create the service
-        service = (new Service){value: 10 ether}();
+        service = (new Service){value: 10 ether}(0.1 ether, 1000);
     }
 
     function testExec() public {
@@ -51,6 +51,8 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         instance.exec({ target: target, value: value, callData: "" });
 
         // Check if the balance of the target has increased
+        console.log(target.balance);
+        console.log(prevBalance + value);
         assertEq(target.balance, prevBalance + value);
     }
 
@@ -64,8 +66,6 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
 
     function testSubscribe() public {
         bool success = sub_module.subscribe(address(service), 0.01 ether, 10000);
-
-        // assertEq(success, true);
 
         SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
             target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
