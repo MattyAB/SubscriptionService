@@ -36,14 +36,30 @@ contract Service {
     //     return subscribers[subscriber];
     // }
 
-    function collect(SubscriptionModule[] memory users) public authorised returns(bool success) {
+    function collect(SubscriptionModule[] memory users) public authorised returns(bool[] memory) {
+        bool[] memory returner = new bool[](users.length);
+
+
         for (uint256 i = 0; i < users.length; i++) {
             if (subscribers[address(users[i])] + sub_frequency <= block.timestamp) {
-                users[i].requestFunds();
+                bool funds_received = users[i].requestFunds();
+
+                console.log(funds_received);
+
+                if (funds_received) {
+                    subscribers[address(users[i])] += sub_frequency;
+                    returner[i] = true;
+                } else {
+                    returner[i] = false;
+                }
+
+                // // require(funds_received, "Funds not successfully retreived");
+
+                // subscribers[address(users[i])] += sub_frequency;
             }
         }
 
-        return true;
+        return returner;
     }
 
     // function collect_initial() public returns(bool[] success) {

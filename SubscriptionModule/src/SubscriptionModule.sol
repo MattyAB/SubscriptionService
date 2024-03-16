@@ -3,10 +3,11 @@ pragma solidity ^0.8.23;
 
 import "forge-std/console.sol";
 
-import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
-// import { Service } from "./Service.sol";
+import { ERC7579ExecutorBase } from "modulekit/Modules.sol";
+import { IERC7579Account } from "modulekit/Accounts.sol";
+import { ModeLib } from "erc7579/lib/ModeLib.sol";
 
-contract SubscriptionModule is ERC7579HookBase {
+contract SubscriptionModule is ERC7579ExecutorBase {
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
     //////////////////////////////////////////////////////////////////////////*/
@@ -28,59 +29,53 @@ contract SubscriptionModule is ERC7579HookBase {
      */
     function isInitialized(address smartAccount) external view returns (bool) { }
 
+
+
     /*//////////////////////////////////////////////////////////////////////////
                                      STORAGE
     //////////////////////////////////////////////////////////////////////////*/
 
-    struct SubscriptionData {
+    struct SubscriptionParams {
         address target;
         uint256 value;
         uint256 frequency;
+    }
+
+    struct SubscriptionData {
+        SubscriptionParams params;
         uint256 most_recent; // Most recent block height
     }
 
     SubscriptionData[] subscriptions_list;
+    
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
     //////////////////////////////////////////////////////////////////////////*/
 
     /**
-     * Pre-checks an execution
-     * @param msgSender The sender of the execution to the account
-     * @param msgData The data of the execution
-     * @return hookData The data to be used in the post-check
+     * ERC-7579 does not define any specific interface for executors, so the
+     * executor can implement any logic that is required for the specific usecase.
      */
-    function preCheck(
-        address msgSender,
-        bytes calldata msgData
-    )
-        external
-        override
-        returns (bytes memory hookData)
-    {
-        hookData = abi.encode(true);
+
+    /*
+     * Execute the given data
+     * @dev This is an example function that can be used to execute arbitrary data
+     * @dev This function is not part of the ERC-7579 standard
+     * @param data The data to execute
+     */
+    function execute(bytes calldata data) external {
+        IERC7579Account(msg.sender).executeFromExecutor(ModeLib.encodeSimpleSingle(), data);
     }
 
-    /**
-     * Post-checks an execution
-     * @param hookData The data from the pre-check
-     * @return success true if the execution is successful, false otherwise
-     */
-    function postCheck(bytes calldata hookData) external override returns (bool success) {
-        (success) = abi.decode(hookData, (bool));
-    }
-
-    function subscribe(address service, uint256 value, uint256 frequency)
+    function subscribe(SubscriptionParams memory params)
         public returns (bool success) {
         // require(value >= service.min_sub_value(), "Minimum subscription value not reached");
         // require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
 
         SubscriptionData memory this_data = SubscriptionData({
-            target: service,
-            value: value,
-            frequency: frequency,
-            most_recent: block.timestamp - frequency
+            params: params,
+            most_recent: block.timestamp - params.frequency
         });
 
         subscriptions_list.push(this_data);
@@ -95,12 +90,26 @@ contract SubscriptionModule is ERC7579HookBase {
 
     function requestFunds() public returns(bool success) {
         for (uint256 i = 0; i < subscriptions_list.length; i++) {
-            if (subscriptions_list[i].target == msg.sender && subscriptions_list[i].value <= address(this).balance) {
-                (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
+            console.log(subscriptions_list[i].params.target);
+            console.log(msg.sender);
+            console.log(subscriptions_list[i].params.value);
+            console.log(address(this).balance);
 
-                require(send, "Send not executed successfully");
+            if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
+                IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
-                subscriptions_list[i].most_recent += subscriptions_list[i].frequency;
+                // smartAccount.executeFromExecutor(
+                //     ModeLib.encodeSimpleSingle(),
+                //     ExecutionLib.encodeSingle(
+                        
+                //     )
+                // )
+
+                // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
+
+                // require(send, "Send not executed successfully");
+
+                subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
 
                 return true;
             }
@@ -118,7 +127,7 @@ contract SubscriptionModule is ERC7579HookBase {
      * @return name The name of the module
      */
     function name() external pure returns (string memory) {
-        return "SubscriptionModule";
+        return "ExecutorTemplate";
     }
 
     /**
@@ -135,6 +144,6 @@ contract SubscriptionModule is ERC7579HookBase {
         * @return true if the module is of the given type, false otherwise
         */
     function isModuleType(uint256 typeID) external pure override returns (bool) {
-        return typeID == TYPE_HOOK;
+        return typeID == TYPE_EXECUTOR;
     }
 }
