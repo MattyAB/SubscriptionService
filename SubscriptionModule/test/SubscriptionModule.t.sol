@@ -10,14 +10,16 @@ import {
 } from "modulekit/ModuleKit.sol";
 import { MODULE_TYPE_HOOK } from "modulekit/external/ERC7579.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
+import { Service } from "src/Service.sol";
 
-contract HookTemplateTest is RhinestoneModuleKit, Test {
+contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
     // account and modules
     AccountInstance internal instance;
     SubscriptionModule internal sub_module;
+    Service internal service;
 
     function setUp() public {
         init();
@@ -30,6 +32,9 @@ contract HookTemplateTest is RhinestoneModuleKit, Test {
         instance = makeAccountInstance("SubscriptionModule");
         vm.deal(address(instance.account), 10 ether);
         instance.installModule({ moduleTypeId: MODULE_TYPE_HOOK, module: address(sub_module), data: "" });
+
+        // Create the service
+        service = (new Service){value: 10 ether}();
     }
 
     function testExec() public {
@@ -47,18 +52,15 @@ contract HookTemplateTest is RhinestoneModuleKit, Test {
         assertEq(target.balance, prevBalance + value);
     }
 
-    function testSubscribe() public {
-        // Create a target address and send some ether to it
-        address target = makeAddr("target");
-        uint256 value = 1 ether;
+    function testWithdraw() public {
+        uint256 prev_value = address(this).balance;
 
-        // Get the current balance of the target
-        uint256 prevBalance = target.balance;
+        service.withdraw(instance, 1 ether);
 
-        // Execute the call
-        instance.exec({ target: target, value: value, callData: "" });
-
-        // Check if the balance of the target has increased
-        assertEq(target.balance, prevBalance + value);
+        assertEq(prev_value + 1 ether, address(this).balance);
     }
+
+    // function testSubscribe() public {
+        
+    // }
 }
