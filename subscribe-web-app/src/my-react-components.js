@@ -9,7 +9,7 @@ import {
     Card
 } from 'react-bootstrap'
 
-export function NavBar() {
+export function NavBar({ subscribed }) {
     const [modalShowStatus, setShowModal] = useState(false);
 
     const handleCloseModal = () => {
@@ -22,7 +22,7 @@ export function NavBar() {
                 <Container fluid>
                     <Navbar.Brand href="home" className='ms-3'>SubHub</Navbar.Brand>
                     <Nav className='me-5'>
-                        <Button variant='primary' onClick={handleShowModal}>My Subscription</Button>
+                        {subscribed ? <Button variant='primary' onClick={handleShowModal} show={false}>My Subscription</Button> : null}
                     </Nav>
                 </Container>
             </Navbar>
@@ -48,19 +48,41 @@ export function NavBar() {
     );
 }
 
-export function SubscriptionContent() {
+export function SubscriptionContent({ connected, subscribed }) {
+    function CardContent({ connected, subscribed }) {
+        if (!connected) {
+            return (
+                <Card.Body className="d-flex flex-column align-items-center">
+                    <Card.Title className="text-center">You have not connected a wallet</Card.Title>
+                    <Card.Text>
+                        Click the button above to connect your metamask.
+                    </Card.Text>
+                </Card.Body>
+            )
+        } else if (!subscribed) {
+            return (
+                <Card.Body className="d-flex flex-column align-items-center">
+                    <Card.Title className="text-center">You are not subscribed</Card.Title>
+                    <Card.Text>
+                        Click the button below to subscribe.
+                    </Card.Text>
+                    <Button>Subscribe</Button>
+                </Card.Body>
+            )
+        } else {
+            return (
+                <Card.Body className="d-flex flex-column align-items-center">
+                    <Card.Title className="text-center">You are subscribed!</Card.Title>
+                </Card.Body>
+            )
+        }
 
+    }
     return (
         <Container className="d-flex flex-column align-items-center">
             <h1>Welcome</h1>
             <Card style={{ width: '18rem' }}>
-                <Card.Body className="d-flex flex-column align-items-center">
-                    <Card.Title>You are not logged in</Card.Title>
-                    <Card.Text>
-                        Click the button below to sign in or subscribe.
-                    </Card.Text>
-                    <Button variant="primary">Verify</Button>
-                </Card.Body>
+                <CardContent connected={connected} subscribed={subscribed}></CardContent>
             </Card>
         </Container>
     )

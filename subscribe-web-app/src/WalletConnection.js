@@ -18,7 +18,7 @@ export function WalletComponent({ connected, setConnected }) {
 
     function ConnectedStatus() {
         if (connected) {
-            return (<p>Connected to account {accountAddress}</p>)
+            return (<p className="text-wrap">Connected to account {accountAddress}</p>)
         }
     }
 

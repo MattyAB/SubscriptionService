@@ -5,12 +5,13 @@ import { Container } from 'react-bootstrap';
 
 function PageContent() {
   const [connected, setConnected] = useState(false)
+  const [subscribed, setSubscribed] = useState(false)
   return (
     <>
-      <NavBar></NavBar>
+      <NavBar subscribed={subscribed}></NavBar>
       <Container fluid className="d-flex flex-column align-items-center">
         <WalletComponent connected={connected} setConnected={setConnected}></WalletComponent>
-        <SubscriptionContent></SubscriptionContent>
+        <SubscriptionContent connected={connected} subscribed={subscribed}></SubscriptionContent>
       </Container>
       <Footer></Footer>
     </>
