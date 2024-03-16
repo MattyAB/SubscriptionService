@@ -15,6 +15,12 @@ import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { Service } from "src/Service.sol";
 
+import { IERC20 } from "forge-std/interfaces/IERC20.sol";
+
+import "modulekit/ModuleKit.sol";
+import "modulekit/Modules.sol";
+import "modulekit/Mocks.sol";
+
 import "forge-std/console.sol";
 
 contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
@@ -28,9 +34,17 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
     AccountInstance internal instance;
     SubscriptionModule internal sub_module;
     Service internal service;
+    
+    MockERC20 internal token;
+
 
     function setUp() public {
         init();
+
+        token = new MockERC20();
+        token.initialize("Mock Token", "MTK", 18);
+        deal(address(token), instance.account, 100 ether);
+
 
         // Create the hook
         sub_module = new SubscriptionModule();
@@ -169,20 +183,27 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
-        console.log(address(this));
+        console.log(address(service).balance);
 
-        console.log(address(this).balance);
+        console.log(instance.account);
 
         instance.exec({
             target: address(sub_module),
             value: 0,
             callData: abi.encodeCall(
                 SubscriptionModule.requestFunds,
-                (address(this))
+                (address(service))
             )
         });
 
-        console.log(address(this).balance);
+        // instance.getExecOps({
+        //     target: address(sub_module),
+        //     value: 0,
+        //     callData: abi.encodeCall(SubscriptionModule.requestFunds, (address(service))),
+        //     txValidator: address(instance.defaultValidator)
+        // }).execUserOps();
+
+        console.log(address(service).balance);
 
 
         // UserOpData memory userOpData = instance.getExecOps({

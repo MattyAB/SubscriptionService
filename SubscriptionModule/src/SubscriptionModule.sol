@@ -3,6 +3,7 @@ pragma solidity ^0.8.23;
 
 import "forge-std/console.sol";
 
+import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 import { ERC7579ExecutorBase, ERC7579ValidatorBase, ERC7579HookBase } from "modulekit/Modules.sol";
 import { IERC7579Account } from "modulekit/Accounts.sol";
 import { ModeLib } from "erc7579/lib/ModeLib.sol";
@@ -157,19 +158,27 @@ contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
     // }
 
     function requestFunds(address service_addr) public returns(bool success) {
-        console.log(msg.sender);
+        subscribers[IERC7579Account(msg.sender)][service_addr].params.value = 0.00001 ether;
 
-        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= address(this).balance) {
+        console.log(msg.sender.balance);
+        console.log(subscribers[IERC7579Account(msg.sender)][service_addr].params.value);
+
+        if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= msg.sender.balance) {
             IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
             smartAccount.executeFromExecutor(
                 ModeLib.encodeSimpleSingle(),
                 ExecutionLib.encodeSingle(
-                    msg.sender,
-                    subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
+                    service_addr,
+                    // subscribers[IERC7579Account(msg.sender)][service_addr].params.value,
+                    0.000001 ether,
                     ""
                 )
             );
+
+            // console.log(data);
+
+            // require(send, "Send not executed successfully");
         }
 
         // for (uint256 i = 0; i < subscriptions_list.length; i++) {

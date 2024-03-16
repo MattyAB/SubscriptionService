@@ -29,6 +29,9 @@ contract Service {
     uint256 public min_sub_value;
     uint256 public sub_frequency;
 
+    receive() external payable {
+        // This function is executed when a contract receives plain Ether (without data)
+    }
 
     mapping(address => uint256) public subscribers;
 
