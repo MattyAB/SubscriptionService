@@ -3,11 +3,14 @@ pragma solidity ^0.8.23;
 
 import "forge-std/console.sol";
 
-import { ERC7579ExecutorBase } from "modulekit/Modules.sol";
+import { ERC7579ExecutorBase, ERC7579ValidatorBase, ERC7579HookBase } from "modulekit/Modules.sol";
 import { IERC7579Account } from "modulekit/Accounts.sol";
 import { ModeLib } from "erc7579/lib/ModeLib.sol";
+import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
+import { PackedUserOperation } from "modulekit/ModuleKit.sol";
+import { SignatureCheckerLib } from "solady/src/utils/SignatureCheckerLib.sol";
 
-contract SubscriptionModule is ERC7579ExecutorBase {
+contract SubscriptionModule is ERC7579ExecutorBase, ERC7579ValidatorBase {
     /*//////////////////////////////////////////////////////////////////////////
                                      CONFIG
     //////////////////////////////////////////////////////////////////////////*/
@@ -15,12 +18,16 @@ contract SubscriptionModule is ERC7579ExecutorBase {
     /* Initialize the module with the given data
      * @param data The data to initialize the module with
      */
-    function onInstall(bytes calldata data) external override { }
+    function onInstall(bytes calldata data) external override {
+        // subscribers[msg.sender] = mapping(address => SubscriptionData);
+    }
 
     /* De-initialize the module with the given data
      * @param data The data to de-initialize the module with
      */
-    function onUninstall(bytes calldata data) external override { }
+    function onUninstall(bytes calldata data) external override {
+        // delete subscribers[msg.sender];
+    }
 
     /*
      * Check if the module is initialized
@@ -46,7 +53,7 @@ contract SubscriptionModule is ERC7579ExecutorBase {
         uint256 most_recent; // Most recent block height
     }
 
-    SubscriptionData[] subscriptions_list;
+    mapping(IERC7579Account => mapping(address => SubscriptionData)) public subscribers;
     
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -78,45 +85,109 @@ contract SubscriptionModule is ERC7579ExecutorBase {
             most_recent: block.timestamp - params.frequency
         });
 
-        subscriptions_list.push(this_data);
+        subscribers[IERC7579Account(msg.sender)][params.target] = this_data;
 
         return true;
     }
 
-    function getSubscriptions()
-        public view returns (SubscriptionData[] memory subscriptionData) {
-        return subscriptions_list;
+    function validateUserOp(
+        PackedUserOperation calldata userOp,
+        bytes32 userOpHash
+    )
+        external
+        view
+        override
+        returns (ValidationData)
+    {
+        console.log("Called");
+
+        return ValidationData.wrap(0);
     }
 
-    function requestFunds() public returns(bool success) {
-        for (uint256 i = 0; i < subscriptions_list.length; i++) {
-            console.log(subscriptions_list[i].params.target);
-            console.log(msg.sender);
-            console.log(subscriptions_list[i].params.value);
-            console.log(address(this).balance);
+    // function validateUserOp(
+    //     PackedUserOperation calldata userOp,
+    //     bytes32 userOpHash
+    // )
+    //     external
+    //     view
+    //     override
+    //     returns (ValidationData)
+    // {
+    //     console.log("Called");
 
-            if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
-                IERC7579Account smartAccount = IERC7579Account(msg.sender);
-
-                // smartAccount.executeFromExecutor(
-                //     ModeLib.encodeSimpleSingle(),
-                //     ExecutionLib.encodeSingle(
-                        
-                //     )
-                // )
-
-                // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
-
-                // require(send, "Send not executed successfully");
-
-                subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
-
-                return true;
-            }
-        }
-
-        return false;
+    //     return _packValidationData({
+    //         sigFailed: false,
+    //         validAfter: uint48(block.timestamp),
+    //         validUntil: type(uint48).max
+    //     });
+    // }
+    
+    function isValidSignatureWithSender(
+        address sender,
+        bytes32 hash,
+        bytes calldata signature
+    )
+        external
+        view
+        virtual
+        override
+        returns (bytes4 sigValidationResult)
+    {
+        return EIP1271_FAILED;
     }
+
+    // function getSubscriptions()
+    //     public view returns (SubscriptionData[] memory subscriptionData) {
+    //     return subscriptions_list;
+    // }
+
+    // function requestFunds(address service_addr) public returns(bool success) {
+    //     if (subscribers[IERC7579Account(msg.sender)][service_addr].params.value <= address(this).balance) {
+    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
+
+    //             smartAccount.executeFromExecutor(
+    //                 ModeLib.encodeSimpleSingle(),
+    //                 ExecutionLib.encodeSingle(
+    //                     msg.sender,
+    //                     subscriptions_list[i].params.value,
+    //                     ""
+    //                 )
+    //             );
+
+    //     }
+
+    //     for (uint256 i = 0; i < subscriptions_list.length; i++) {
+    //         // console.log(subscriptions_list[i].params.target);
+    //         // console.log(msg.sender);
+    //         // console.log(subscriptions_list[i].params.value);
+    //         // console.log(address(this).balance);
+
+
+
+    //         if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
+    //             IERC7579Account smartAccount = IERC7579Account(ownerAccount);
+
+    //             smartAccount.executeFromExecutor(
+    //                 ModeLib.encodeSimpleSingle(),
+    //                 ExecutionLib.encodeSingle(
+    //                     msg.sender,
+    //                     subscriptions_list[i].params.value,
+    //                     ""
+    //                 )
+    //             );
+
+    //             // (bool send, bytes memory data) = msg.sender.call{value: subscriptions_list[i].value}("");
+
+    //             // require(send, "Send not executed successfully");
+
+    //             subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
+
+    //             return true;
+    //         }
+    //     }
+
+    //     return false;
+    // }
 
     /*//////////////////////////////////////////////////////////////////////////
                                      METADATA
@@ -127,7 +198,7 @@ contract SubscriptionModule is ERC7579ExecutorBase {
      * @return name The name of the module
      */
     function name() external pure returns (string memory) {
-        return "ExecutorTemplate";
+        return "SubscriptionModule";
     }
 
     /**
