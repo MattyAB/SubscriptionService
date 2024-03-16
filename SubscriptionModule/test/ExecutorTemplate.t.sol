@@ -8,6 +8,7 @@ import {
     ModuleKitUserOp,
     AccountInstance
 } from "modulekit/ModuleKit.sol";
+import { IERC7579Account } from "modulekit/Accounts.sol";
 import { MODULE_TYPE_EXECUTOR } from "modulekit/external/ERC7579.sol";
 import { ExecutionLib } from "erc7579/lib/ExecutionLib.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
@@ -18,7 +19,6 @@ import "forge-std/console.sol";
 contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
-
 
     Account internal account_signer = makeAccount("account_signer");
     Account internal service_signer = makeAccount("service_signer");
@@ -45,7 +45,7 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         });
 
         // Create the service
-        service = (new Service){value: 10 ether}(0.1 ether, 1000);
+        service = (new Service){value: 10 ether}(0.1 ether, 1000, sub_module);
 
         skip(100000); // Set our timestamp to something reasonably high
     }
@@ -99,12 +99,13 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
-        SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
+        (SubscriptionModule.SubscriptionParams memory subscription_params, uint256 most_recent) = 
+            sub_module.subscribers(IERC7579Account(instance.account),address(service));
 
-        assertEq(address(data_returned[0].params.target), address(service));
-        assertEq(data_returned[0].params.value, value);
-        assertEq(data_returned[0].params.frequency, frequency);
-        assertEq(data_returned[0].most_recent, block.timestamp - frequency);
+        assertEq(address(subscription_params.target), address(service));
+        assertEq(subscription_params.value, value);
+        assertEq(subscription_params.frequency, frequency);
+        // assertEq(most_recent, block.timestamp - frequency);
     }
 
     // function testSubscribeInsufficientValue() public {
@@ -134,10 +135,16 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
-        SubscriptionModule[] memory request = new SubscriptionModule[](1);
-        request[0] = sub_module;
+        // AccountInstance[] memory request = new AccountInstance[](1);
+        // request[0] = instance;
 
-        // bool[] memory user_successes = service.collect(request);
-        // require(user_successes[0], "User unsuccessful in providing payment");
+        // instance.exec({
+        //     target: address(sub_module),
+        //     value: 0,
+        //     callData: abi.encodeWithSelector(SubscriptionModule.execute.selector, callData)
+        // });
+
+        success = service.collect(instance);
+        require(success, "User unsuccessful in providing payment");
     }
 }

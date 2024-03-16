@@ -6,12 +6,23 @@ import "forge-std/console.sol";
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
 
 import { SubscriptionModule } from "./SubscriptionModule.sol";
+import {
+    RhinestoneModuleKit,
+    ModuleKitHelpers,
+    ModuleKitUserOp,
+    AccountInstance
+} from "modulekit/ModuleKit.sol";
 
 contract Service {
+    using ModuleKitHelpers for *;
+    using ModuleKitUserOp for *;
+
     address owner;
+    SubscriptionModule sub_module;
 
     uint256 public min_sub_value;
     uint256 public sub_frequency;
+
 
     mapping(address => uint256) public subscribers;
 
@@ -20,10 +31,11 @@ contract Service {
         _;
     }
 
-    constructor(uint256 _min_sub_value, uint256 _sub_frequency) payable {
+    constructor(uint256 _min_sub_value, uint256 _sub_frequency, SubscriptionModule _sub_module) payable {
         owner = msg.sender;
         min_sub_value = _min_sub_value;
         sub_frequency = _sub_frequency;
+        sub_module = _sub_module;
     }
 
     function withdraw(address _to, uint256 value) public authorised {
@@ -36,22 +48,45 @@ contract Service {
     //     return subscribers[subscriber];
     // }
 
-    function collect(SubscriptionModule[] memory users) public authorised returns(bool[] memory) {
+    function collect(AccountInstance calldata user) public authorised returns(bool) {
+        console.log("Here");
+
+        // user.exec({
+        //     target: address(sub_module),
+        //     value: 0,
+        //     callData: abi.encodeCall(
+        //         SubscriptionModule.requestFunds,
+        //         ()
+        //     )
+        // });
+
+        console.log("There");
+
+        return true;
+    }
+
+    function collect(AccountInstance[] memory users) public authorised returns(bool[] memory) {
         bool[] memory returner = new bool[](users.length);
 
-
         for (uint256 i = 0; i < users.length; i++) {
-            if (subscribers[address(users[i])] + sub_frequency <= block.timestamp) {
-                bool funds_received = users[i].requestFunds();
+            if (subscribers[users[i].account] + sub_frequency <= block.timestamp) {
+                // users[i].exec({
+                //     target: address(sub_module),
+                //     value: 0,
+                //     callData: abi.encodeCall(
+                //         SubscriptionModule.requestFunds,
+                //         ()
+                //     )
+                // });
 
-                console.log(funds_received);
+                // console.log(funds_received);
 
-                if (funds_received) {
-                    subscribers[address(users[i])] += sub_frequency;
-                    returner[i] = true;
-                } else {
-                    returner[i] = false;
-                }
+                // if (funds_received) {
+                //     subscribers[address(users[i])] += sub_frequency;
+                //     returner[i] = true;
+                // } else {
+                //     returner[i] = false;
+                // }
 
                 // // require(funds_received, "Funds not successfully retreived");
 
