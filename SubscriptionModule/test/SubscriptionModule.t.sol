@@ -53,11 +53,11 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
     }
 
     function testWithdraw() public {
-        uint256 prev_value = address(this).balance;
+        address recipient; // Declaring an empty address
 
-        service.withdraw(instance, 1 ether);
+        service.withdraw(recipient, 1 ether);
 
-        assertEq(prev_value + 1 ether, address(this).balance);
+        assertEq(1 ether, recipient.balance);
     }
 
     // function testSubscribe() public {
