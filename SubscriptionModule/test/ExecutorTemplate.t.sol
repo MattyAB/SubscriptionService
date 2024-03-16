@@ -19,6 +19,10 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
 
+
+    Account internal account_signer = makeAccount("account_signer");
+    Account internal service_signer = makeAccount("service_signer");
+
     // account and modules
     AccountInstance internal instance;
     SubscriptionModule internal sub_module;
@@ -79,14 +83,27 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         uint256 frequency = 1000;
         uint256 value = 0.1 ether;
 
-        bool success = sub_module.subscribe(address(service), value, frequency);
+        SubscriptionModule.SubscriptionParams memory params =
+            SubscriptionModule.SubscriptionParams({ 
+                target: address(service), value: value, frequency: frequency
+            });
+
+
+        instance.getExecOps({
+            target: address(sub_module),
+            value: 0,
+            callData: abi.encodeCall(SubscriptionModule.subscribe, (params)),
+            txValidator: address(instance.defaultValidator)
+        }).execUserOps();
+
+        bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
         SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
 
-        assertEq(address(data_returned[0].target), address(service));
-        assertEq(data_returned[0].value, value);
-        assertEq(data_returned[0].frequency, frequency);
+        assertEq(address(data_returned[0].params.target), address(service));
+        assertEq(data_returned[0].params.value, value);
+        assertEq(data_returned[0].params.frequency, frequency);
         assertEq(data_returned[0].most_recent, block.timestamp - frequency);
     }
 
@@ -110,7 +127,11 @@ contract ExecutorTemplateTest is RhinestoneModuleKit, Test {
         uint256 frequency = 1000;
         uint256 value = 0.1 ether;
 
-        bool success = sub_module.subscribe(address(service), value, frequency);
+        SubscriptionModule.SubscriptionParams memory params = SubscriptionModule.SubscriptionParams({
+            target: address(service), value: value, frequency: frequency
+        });
+
+        bool success = sub_module.subscribe(params);
         require(success, "Didn't successfully subscribe");
 
         SubscriptionModule[] memory request = new SubscriptionModule[](1);

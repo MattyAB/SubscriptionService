@@ -35,10 +35,14 @@ contract SubscriptionModule is ERC7579ExecutorBase {
                                      STORAGE
     //////////////////////////////////////////////////////////////////////////*/
 
-    struct SubscriptionData {
+    struct SubscriptionParams {
         address target;
         uint256 value;
         uint256 frequency;
+    }
+
+    struct SubscriptionData {
+        SubscriptionParams params;
         uint256 most_recent; // Most recent block height
     }
 
@@ -64,16 +68,14 @@ contract SubscriptionModule is ERC7579ExecutorBase {
         IERC7579Account(msg.sender).executeFromExecutor(ModeLib.encodeSimpleSingle(), data);
     }
 
-    function subscribe(address service, uint256 value, uint256 frequency)
+    function subscribe(SubscriptionParams memory params)
         public returns (bool success) {
         // require(value >= service.min_sub_value(), "Minimum subscription value not reached");
         // require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
 
         SubscriptionData memory this_data = SubscriptionData({
-            target: service,
-            value: value,
-            frequency: frequency,
-            most_recent: block.timestamp - frequency
+            params: params,
+            most_recent: block.timestamp - params.frequency
         });
 
         subscriptions_list.push(this_data);
@@ -88,12 +90,12 @@ contract SubscriptionModule is ERC7579ExecutorBase {
 
     function requestFunds() public returns(bool success) {
         for (uint256 i = 0; i < subscriptions_list.length; i++) {
-            console.log(subscriptions_list[i].target);
+            console.log(subscriptions_list[i].params.target);
             console.log(msg.sender);
-            console.log(subscriptions_list[i].value);
+            console.log(subscriptions_list[i].params.value);
             console.log(address(this).balance);
 
-            if (subscriptions_list[i].target == msg.sender && subscriptions_list[i].value <= address(this).balance) {
+            if (subscriptions_list[i].params.target == msg.sender && subscriptions_list[i].params.value <= address(this).balance) {
                 IERC7579Account smartAccount = IERC7579Account(msg.sender);
 
                 // smartAccount.executeFromExecutor(
@@ -107,7 +109,7 @@ contract SubscriptionModule is ERC7579ExecutorBase {
 
                 // require(send, "Send not executed successfully");
 
-                subscriptions_list[i].most_recent += subscriptions_list[i].frequency;
+                subscriptions_list[i].most_recent += subscriptions_list[i].params.frequency;
 
                 return true;
             }
