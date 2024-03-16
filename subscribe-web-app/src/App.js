@@ -24,27 +24,21 @@
 
 // export default App;
 
-import React, { Component } from 'react'
+import React, { useState, Component } from 'react'
 import { NavBar, SubscriptionContent, Footer } from './my-react-components'
-// import { ethers } from "ethers"
-
-// const connectwalletHandler = () => {
-//   if (window.ethereum) {
-//     provider.send("eth_requestAccounts", [])
-//       .then(async () => {
-//         await accountChangedHandler(provider.getSigner());
-//       })
-//   } else {
-//     setErrorMessage("Please Install MetaMask!!!");
-//   }
-// }
+import { WalletComponent } from './WalletConnection';
+import { Container } from 'react-bootstrap';
+// import "./WalletConnection"
 
 class App extends Component {
   render() {
     return (
       <body>
         <NavBar></NavBar>
-        <SubscriptionContent></SubscriptionContent>
+        <Container fluid className="d-flex flex-column align-items-center">
+          <WalletComponent></WalletComponent>
+          <SubscriptionContent></SubscriptionContent>
+        </Container>
         <Footer></Footer>
       </body>
 

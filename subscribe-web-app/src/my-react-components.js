@@ -72,7 +72,7 @@ export function SubscriptionContent() {
 export function Footer() {
     return (
         <Container fluid className="footer mt-auto py-3 bg-body-tertiary fixed-bottom">
-            <span class="text-body-secondary">Subscription Project ETHGlobal London</span>
+            <span className="text-body-secondary">Subscription Project ETHGlobal London</span>
         </Container>
     )
 }
