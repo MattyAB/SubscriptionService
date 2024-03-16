@@ -51,8 +51,6 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         instance.exec({ target: target, value: value, callData: "" });
 
         // Check if the balance of the target has increased
-        console.log(target.balance);
-        console.log(prevBalance + value);
         assertEq(target.balance, prevBalance + value);
     }
 
@@ -65,17 +63,31 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
     }
 
     function testSubscribe() public {
-        bool success = sub_module.subscribe(address(service), 0.01 ether, 10000);
+        bool success = sub_module.subscribe(service, 0.1 ether, 1000);
 
-        SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
-            target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
-        });
+        // SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
+        //     target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
+        // });
         
         SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
 
-        assertEq(data_returned[0].target, address(service));
-        assertEq(data_returned[0].value, 0.01 ether);
-        assertEq(data_returned[0].frequency, 10000);
+        assertEq(address(data_returned[0].target), address(service));
+        assertEq(data_returned[0].value, 0.1 ether);
+        assertEq(data_returned[0].frequency, 1000);
         assertEq(data_returned[0].most_recent, block.number);
     }
+
+    function testSubscribeInsufficientValue() public {
+        try sub_module.subscribe(service, 0.01 ether, 1000) {
+            assertEq(false, true, "Expected an error.");
+        } catch Error(string memory message) {
+            assertEq(message, "Minimum subscription value not reached");
+        }
+    }
+
+    // function testSubscribeInsufficientFrequency() public {
+    //     bool success = sub_module.subscribe(service, 0.1 ether, 10000);
+        
+
+    // }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.23;
 import "forge-std/console.sol";
 
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
+import { Service } from "./Service.sol";
 
 contract SubscriptionModule is ERC7579HookBase {
     /*//////////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ contract SubscriptionModule is ERC7579HookBase {
     //////////////////////////////////////////////////////////////////////////*/
 
     struct SubscriptionData {
-        address target;
+        Service target;
         uint256 value;
         uint256 frequency;
         uint256 most_recent; // Most recent block height
@@ -70,8 +71,11 @@ contract SubscriptionModule is ERC7579HookBase {
         (success) = abi.decode(hookData, (bool));
     }
 
-    function subscribe(address service, uint256 value, uint256 frequency)
+    function subscribe(Service service, uint256 value, uint256 frequency)
         public returns (bool success) {
+        require(value >= service.min_sub_value(), "Minimum subscription value not reached");
+        require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
+
         SubscriptionData memory this_data = SubscriptionData({
             target: service,
             value: value,
