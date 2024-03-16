@@ -12,6 +12,8 @@ import { MODULE_TYPE_HOOK } from "modulekit/external/ERC7579.sol";
 import { SubscriptionModule } from "src/SubscriptionModule.sol";
 import { Service } from "src/Service.sol";
 
+import "forge-std/console.sol";
+
 contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
     using ModuleKitHelpers for *;
     using ModuleKitUserOp for *;
@@ -60,7 +62,20 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
         assertEq(1 ether, recipient.balance);
     }
 
-    // function testSubscribe() public {
+    function testSubscribe() public {
+        bool success = sub_module.subscribe(address(service), 0.01 ether, 10000);
+
+        // assertEq(success, true);
+
+        SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
+            target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
+        });
         
-    // }
+        SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
+
+        assertEq(data_returned[0].target, address(service));
+        assertEq(data_returned[0].value, 0.01 ether);
+        assertEq(data_returned[0].frequency, 10000);
+        assertEq(data_returned[0].most_recent, block.number);
+    }
 }

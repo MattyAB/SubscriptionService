@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
+import "forge-std/console.sol";
+
 import { ERC7579HookBase } from "modulekit/modules/ERC7579HookBase.sol";
 
 contract SubscriptionModule is ERC7579HookBase {
@@ -33,7 +35,10 @@ contract SubscriptionModule is ERC7579HookBase {
         address target;
         uint256 value;
         uint256 frequency;
+        uint256 most_recent; // Most recent block height
     }
+
+    SubscriptionData[] subscriptions_list;
 
     /*//////////////////////////////////////////////////////////////////////////
                                      MODULE LOGIC
@@ -63,6 +68,25 @@ contract SubscriptionModule is ERC7579HookBase {
      */
     function postCheck(bytes calldata hookData) external override returns (bool success) {
         (success) = abi.decode(hookData, (bool));
+    }
+
+    function subscribe(address service, uint256 value, uint256 frequency)
+        public returns (bool success) {
+        SubscriptionData memory this_data = SubscriptionData({
+            target: service,
+            value: value,
+            frequency: frequency,
+            most_recent: block.number
+        });
+
+        subscriptions_list.push(this_data);
+        
+        return true;
+    }
+
+    function getSubscriptions()
+        public view returns (SubscriptionData[] memory subscriptionData) {
+        return subscriptions_list;
     }
 
     /*//////////////////////////////////////////////////////////////////////////
