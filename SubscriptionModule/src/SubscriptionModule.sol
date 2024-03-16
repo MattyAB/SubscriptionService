@@ -76,11 +76,13 @@ contract SubscriptionModule is ERC7579HookBase {
         require(value >= service.min_sub_value(), "Minimum subscription value not reached");
         require(frequency <= service.sub_frequency(), "Subscription payment frequnecy too low");
 
+        service.notify_subscription();
+
         SubscriptionData memory this_data = SubscriptionData({
             target: service,
             value: value,
             frequency: frequency,
-            most_recent: block.number
+            most_recent: block.timestamp - frequency
         });
 
         subscriptions_list.push(this_data);

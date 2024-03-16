@@ -37,6 +37,8 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
 
         // Create the service
         service = (new Service){value: 10 ether}(0.1 ether, 1000);
+
+        skip(100000); // Set our timestamp to something reasonably high
     }
 
     function testExec() public {
@@ -63,18 +65,25 @@ contract SubscriptionModuleTest is RhinestoneModuleKit, Test {
     }
 
     function testSubscribe() public {
-        bool success = sub_module.subscribe(service, 0.1 ether, 1000);
+        uint256 frequency = 1000;
+        uint256 value = 0.1 ether;
+
+        bool success = sub_module.subscribe(service, value, frequency);
 
         // SubscriptionModule.SubscriptionData memory data = SubscriptionModule.SubscriptionData({
         //     target: address(service), value: 0.01 ether, frequency: 10000, most_recent: block.number
         // });
         
+        console.log(service.get_subscriber_recent(address(sub_module)));
+
         SubscriptionModule.SubscriptionData[] memory data_returned = sub_module.getSubscriptions();
 
         assertEq(address(data_returned[0].target), address(service));
-        assertEq(data_returned[0].value, 0.1 ether);
-        assertEq(data_returned[0].frequency, 1000);
-        assertEq(data_returned[0].most_recent, block.number);
+        assertEq(data_returned[0].value, value);
+        assertEq(data_returned[0].frequency, frequency);
+        assertEq(data_returned[0].most_recent, block.timestamp - frequency);
+
+        assertEq(service.get_subscriber_recent(address(sub_module)), block.timestamp - frequency);
     }
 
     function testSubscribeInsufficientValue() public {
