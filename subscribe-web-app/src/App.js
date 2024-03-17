@@ -4,6 +4,7 @@ import { WalletComponent } from './WalletConnection';
 import { Container } from 'react-bootstrap';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { MetaMaskWallet, SmartWallet } from "@thirdweb-dev/wallets";
+import { smartWallet, ConnectWallet, ThirdwebProvider } from "@thirdweb-dev/react"
 import { Sepolia } from "@thirdweb-dev/chains"
 
 // const provider = await detectEthereumProvider();
@@ -37,6 +38,9 @@ function PageContent() {
       setWalletConnectErrorText("")
       setConnected(true)
       checkSubscribed(address)
+      // smartWallet(personalWallet, {
+      //   factoryAddress: "0xCb5894a8C4d5686AaFeAE5Dc0776DF1e6a9F2D8b"
+      // })
       const smartWallet = new SmartWallet(config)
       console.log(smartWallet)
       await smartWallet.connect({
@@ -102,6 +106,8 @@ function PageContent() {
   return (
     <>
       <NavBar subscribed={subscribed}></NavBar>
+      {/* <ThirdwebProvider><ConnectWallet></ConnectWallet></ThirdwebProvider> */}
+
       <Container fluid className="d-flex flex-column align-items-center">
         <WalletComponent connected={connected} getAccount={connectMetaMask} errorText={walletConnectErrorText} accountAddress={accountAddress}></WalletComponent>
         <SubscriptionContent connected={connected} subscribed={subscribed} subscribe={subscribe}></SubscriptionContent>
