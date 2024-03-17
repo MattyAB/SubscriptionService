@@ -41,11 +41,11 @@ function PageContent() {
       // smartWallet(personalWallet, {
       //   factoryAddress: "0xCb5894a8C4d5686AaFeAE5Dc0776DF1e6a9F2D8b"
       // })
-      const smartWallet = new SmartWallet(config)
-      console.log(smartWallet)
-      await smartWallet.connect({
-        personalWallet,
-      })
+      // const smartWallet = new SmartWallet(config)
+      // console.log(smartWallet)
+      // await smartWallet.connect({
+      //   personalWallet,
+      // })
     } catch (err) {
       console.log(err)
       setWalletConnectErrorText("Please try again.")
